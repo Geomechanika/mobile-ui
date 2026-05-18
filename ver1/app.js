@@ -5,6 +5,7 @@ const DIAL_CIRC = TAU * DIAL_RADIUS;
 const UI_CONFIG = {
   dialReadOnly: true,
   showDialLabel: true,
+  showSensorSource: false,
   showChartTitle: true,
   showYAxisTitle: false,
   chartXTitle: "Дистанция, м",
@@ -68,6 +69,7 @@ const els = {
   stationName: document.getElementById("stationName"),
   stationInput: document.getElementById("stationInput"),
   rollDial: document.getElementById("rollDial"),
+  sensorSource: document.getElementById("sensorSource"),
   dialMode: document.getElementById("dialMode"),
   dialTicks: document.getElementById("dialTicks"),
   dialArc: document.getElementById("dialArc"),
@@ -230,6 +232,10 @@ function setDialReadOnly(readOnly) {
 
 function setDialLabelVisible(visible) {
   setVisible(els.dialLabel, visible);
+}
+
+function setSensorSourceVisible(visible) {
+  setVisible(els.sensorSource, visible);
 }
 
 function setChartTitleVisible(visible) {
@@ -744,6 +750,7 @@ function exposeApi() {
   window.PicoStationUI = {
     setDialReadOnly,
     setDialLabelVisible,
+    setSensorSourceVisible,
     setChartTitleVisible,
     setYAxisTitleVisible,
     setChartXTitle(label) {
@@ -767,6 +774,7 @@ function exposeApi() {
       if (typeof data.connected === "boolean") state.connected = data.connected;
       if (typeof data.dialReadOnly === "boolean") setDialReadOnly(data.dialReadOnly);
       if (typeof data.showDialLabel === "boolean") setDialLabelVisible(data.showDialLabel);
+      if (typeof data.showSensorSource === "boolean") setSensorSourceVisible(data.showSensorSource);
       if (typeof data.showChartTitle === "boolean") setChartTitleVisible(data.showChartTitle);
       if (typeof data.showYAxisTitle === "boolean") {
         UI_CONFIG.showYAxisTitle = data.showYAxisTitle;
@@ -806,6 +814,7 @@ function boot() {
   drawTicks();
   setDialReadOnly(UI_CONFIG.dialReadOnly);
   setDialLabelVisible(UI_CONFIG.showDialLabel);
+  setSensorSourceVisible(UI_CONFIG.showSensorSource);
   setChartTitleVisible(UI_CONFIG.showChartTitle);
   setYAxisTitleVisible(UI_CONFIG.showYAxisTitle);
   applyChartXTitle(UI_CONFIG.chartXTitle);

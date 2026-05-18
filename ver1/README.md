@@ -32,6 +32,7 @@ GET /api/state
   "connected": true,
   "dialReadOnly": true,
   "showDialLabel": true,
+  "showSensorSource": false,
   "showChartTitle": true,
   "showYAxisTitle": false,
   "chartXTitle": "Глубина, м",

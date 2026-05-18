@@ -39,6 +39,12 @@ window.PicoStationUI.setDialLabelVisible(true);
 window.PicoStationUI.setDialLabelVisible(false);
 ```
 
+Плашка источника данных скрыта по умолчанию. Ее можно включить, если нужно явно показать источник сенсора:
+
+```js
+window.PicoStationUI.setSensorSourceVisible(true);
+```
+
 ### Profile Chart
 
 SVG-график профиля с осью `X, м` и переключаемой осью `Y`.
@@ -131,6 +137,7 @@ window.PicoStationUI.setTableColumns([
   "connected": true,
   "dialReadOnly": true,
   "showDialLabel": true,
+  "showSensorSource": false,
   "showChartTitle": true,
   "showYAxisTitle": false,
   "chartXTitle": "Глубина, м",
