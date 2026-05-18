@@ -20,6 +20,7 @@
   --shadow-out: 12px 12px 26px var(--low), -12px -12px 26px var(--high);
   --shadow-soft: 8px 8px 18px rgba(143, 157, 180, 0.42), -8px -8px 18px rgba(255, 255, 255, 0.82);
   --shadow-in: inset 8px 8px 16px rgba(143, 157, 180, 0.45), inset -8px -8px 16px rgba(255, 255, 255, 0.86);
+  --shadow-in-panel: inset 13px 13px 28px rgba(143, 157, 180, 0.36), inset -13px -13px 28px rgba(255, 255, 255, 0.78);
 }
 
 [data-theme="dark"] {
@@ -39,6 +40,7 @@
   --shadow-out: 12px 12px 26px var(--low), -12px -12px 26px var(--high);
   --shadow-soft: 8px 8px 18px rgba(0, 0, 0, 0.42), -8px -8px 18px rgba(255, 255, 255, 0.06);
   --shadow-in: inset 8px 8px 16px rgba(0, 0, 0, 0.48), inset -8px -8px 16px rgba(255, 255, 255, 0.06);
+  --shadow-in-panel: inset 13px 13px 28px rgba(0, 0, 0, 0.46), inset -13px -13px 28px rgba(255, 255, 255, 0.055);
 }
 
 * {
@@ -337,6 +339,13 @@ button {
 
 .chart-panel,
 .table-panel {
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--surface) 92%, var(--surface-2)), var(--surface));
+  box-shadow: var(--shadow-in-panel);
+}
+
+.chart-panel,
+.table-panel {
   padding: 18px 18px 14px;
 }
 
@@ -405,6 +414,8 @@ button {
   height: 184px;
   display: block;
   overflow: visible;
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
 }
 
 .chart-grid path,
@@ -481,8 +492,10 @@ button {
   overflow-x: auto;
   margin-top: 10px;
   border-radius: 22px;
-  background: var(--surface);
-  box-shadow: var(--shadow-in);
+  background: color-mix(in srgb, var(--surface) 84%, var(--surface-2));
+  box-shadow:
+    inset 7px 7px 16px color-mix(in srgb, var(--low) 38%, transparent),
+    inset -7px -7px 16px color-mix(in srgb, var(--high) 72%, transparent);
 }
 
 .neo-table {
@@ -534,8 +547,9 @@ button {
   min-height: 104px;
   padding: 15px;
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-soft);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--surface) 90%, var(--surface-2)), var(--surface));
+  box-shadow: var(--shadow-in-panel);
   display: grid;
   grid-template-columns: 42px 1fr;
   grid-template-rows: auto auto;
@@ -553,7 +567,7 @@ button {
   border-radius: 16px;
   color: var(--muted);
   background: var(--surface);
-  box-shadow: var(--shadow-in);
+  box-shadow: var(--shadow-soft);
 }
 
 .signal-icon,
