@@ -8,6 +8,8 @@
 
 Индикатор крена по продольной оси. По умолчанию работает как `read-only` виджет датчика.
 
+Плейсхолдер данных для прошивки: `A1`. Интерфейс также принимает читаемый алиас `angle`.
+
 ```js
 window.PicoStationUI.setDialReadOnly(true);
 window.PicoStationUI.setDialReadOnly(false);
@@ -82,6 +84,38 @@ window.PicoStationUI.setChartXTitle("Глубина, м");
 ```
 
 Точки графика интерактивные: на касание, клик или фокус появляется подпись с координатой и значением выбранной метрики.
+По умолчанию подпись точки скрыта и появляется только после явного касания/клика по графику.
+
+### Tilt Angle
+
+Угол наклона показывается внутри циферблата вместо нижней подписи. Плейсхолдер данных для прошивки: `A0`.
+Отдельная плашка `tiltPanel` оставлена в шаблоне, но выключена по умолчанию.
+
+```js
+window.PicoStationUI.setInclineAngle(3.7);
+```
+
+### Measure Button
+
+Главная кнопка замера стоит между углом наклона и графиком. Цвет можно задавать прямо атрибутом:
+
+```html
+<button class="measure-button" data-color="#ff865c">Замер</button>
+```
+
+Или менять из JS/API:
+
+```js
+window.PicoStationUI.setMeasureButtonColor("#2fb8ff");
+window.PicoStationUI.measure();
+```
+
+Нажатие отправляет:
+
+```http
+POST /api/measure
+{"measure": true}
+```
 
 ### Data Table
 
@@ -112,6 +146,67 @@ window.PicoStationUI.setTableColumns([
 
 Иконка сигнала окрашивается от синего до красного по уровню `wifi` в dBm. Если страница уже открыта, но `/api/state` перестал отвечать, сигнал переходит в перечеркнутый режим. Если сама страница не загрузилась с устройства, браузер, конечно, не сможет показать состояние дисконнекта.
 
+Нижние блоки можно включать и выключать как шаблонные элементы:
+
+```js
+window.PicoStationUI.setPanelVisibility({
+  infoGrid: true,
+  tiltPanel: false,
+  measureButton: true,
+  infoTiles: {
+    power: true,
+    temperature: true,
+    signal: true,
+    voltage: true
+  },
+  powerPanel: true,
+  tablePanel: true
+});
+```
+
+Те же флаги можно отдавать из `/api/state` в поле `panels` или `visiblePanels`.
+
+### Experiment HUD
+
+Верхняя и боковая плашки показывают короткие параметры эксперимента:
+
+- `B` — батарея станции
+- `P` — питание/напряжение зонда, при отключении выводит `--`
+- `Ts` — температура станции
+- `Tp` — температура зонда
+- `Mem` — свободная память в количестве замеров
+- точка связи — синяя при соединении, красная при потере связи
+
+Управление видимостью:
+
+```js
+window.PicoStationUI.setExperimentHudOptions({
+  topVisible: true,
+  sideVisible: false,
+  items: {
+    battery: true,
+    probeVoltage: true,
+    stationTemp: true,
+    probeTemp: true,
+    memory: true,
+    link: true
+  }
+});
+```
+
+Тумблер зонда в шапке отправляет:
+
+```http
+POST /api/probe-power
+{"probePower": true}
+```
+
+При выключении зонда интерфейс сначала показывает подтверждение, чтобы случайное касание не остановило текущий замер.
+
+### Landscape Mode
+
+В landscape на телефоне интерфейс автоматически переключается в двухколоночный режим: верхний HUD скрывается, боковой HUD включается, левая часть сохраняет размер приборов, а график и кнопка `Замер` занимают правую область экрана.
+
 ### Settings Sheet
 
 Нижняя панель настроек:
@@ -134,6 +229,15 @@ window.PicoStationUI.setTableColumns([
   "wifi": -54,
   "voltage": 5.04,
   "power": true,
+  "probePower": true,
+  "A1": 12.4,
+  "A0": 3.7,
+  "battery": 4.12,
+  "probeVoltage": 13.02,
+  "stationTemp": 12.1,
+  "probeTemp": 8.1,
+  "memoryFree": 399,
+  "measureButtonColor": "#ff865c",
   "connected": true,
   "dialReadOnly": true,
   "showDialLabel": true,
@@ -141,6 +245,23 @@ window.PicoStationUI.setTableColumns([
   "showChartTitle": true,
   "showYAxisTitle": false,
   "chartXTitle": "Глубина, м",
+  "experimentHud": {
+    "topVisible": true,
+    "sideVisible": true
+  },
+  "panels": {
+    "infoGrid": true,
+    "tiltPanel": false,
+    "measureButton": true,
+    "infoTiles": {
+      "power": true,
+      "temperature": true,
+      "signal": true,
+      "voltage": true
+    },
+    "powerPanel": true,
+    "tablePanel": true
+  },
   "profile": {
     "x": [0, 5, 10, 15],
     "height": [0, 2.6, 6.4, 10.2],

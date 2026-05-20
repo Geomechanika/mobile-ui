@@ -7,50 +7,70 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Pico Station</title>
-    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="app.css?v=landscape-layout">
   </head>
   <body>
     <main class="app-shell" aria-label="Панель станции">
+      <section class="experiment-strip experiment-strip-top" id="topExperimentHud" aria-label="Данные эксперимента"></section>
+
       <header class="topbar">
+        <button class="icon-button settings-button" id="settingsOpen" type="button" aria-label="Настройки">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/>
+            <path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M19.4 13.5c.1-.5.1-1 .1-1.5s0-1-.1-1.5l2-1.5-2-3.4-2.5 1a8 8 0 0 0-2-1.2L14.6 2h-5.2L9 4.9a8 8 0 0 0-2 1.2l-2.5-1-2 3.4 2 1.5a8.8 8.8 0 0 0 0 3l-2 1.5 2 3.4 2.5-1a8 8 0 0 0 2 1.2l.4 2.9h5.2l.4-2.9a8 8 0 0 0 2-1.2l2.5 1 2-3.4-2.1-1.5Z"/>
+          </svg>
+        </button>
+
         <button class="station-title" id="stationTitle" type="button" aria-label="Название станции">
-          <span class="station-kicker">Pico 2W</span>
+          <span class="station-kicker">Станция:</span>
           <span class="station-name" id="stationName">Станция 01</span>
         </button>
 
-        <button class="icon-button" id="settingsOpen" type="button" aria-label="Настройки">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Zm8.1 4.9a7.8 7.8 0 0 0 0-2.2l2-1.5-2-3.5-2.4 1a8 8 0 0 0-1.9-1.1L15.5 3h-4l-.4 2.8c-.7.3-1.3.6-1.9 1.1l-2.5-1-2 3.5 2.1 1.5a8.6 8.6 0 0 0 0 2.2l-2.1 1.5 2 3.5 2.5-1c.6.5 1.2.8 1.9 1.1l.4 2.8h4l.3-2.8c.7-.3 1.4-.6 1.9-1.1l2.4 1 2-3.5-2-1.5Z"/>
-          </svg>
+        <button class="probe-switch is-on" id="probePowerSwitch" type="button" role="switch" aria-checked="true" aria-label="Питание зонда">
+          <span></span>
         </button>
       </header>
 
-      <section class="dial-panel" aria-label="Положение станции">
-        <svg class="roll-dial" id="rollDial" data-read-only="true" viewBox="0 0 240 240" role="img" aria-labelledby="dialTitle dialValue">
-          <title id="dialTitle">Шкала продольного вращения</title>
-          <defs>
-            <linearGradient id="accentStroke" x1="40" x2="200" y1="200" y2="40">
-              <stop offset="0" stop-color="#f2a446"/>
-              <stop offset="1" stop-color="#ff7b5f"/>
-            </linearGradient>
-          </defs>
-          <circle class="dial-face" cx="120" cy="120" r="106"></circle>
-          <g class="dial-ticks" id="dialTicks"></g>
-          <circle class="dial-track" cx="120" cy="120" r="88"></circle>
-          <circle class="dial-arc" id="dialArc" cx="120" cy="120" r="88"></circle>
-          <g class="axis-mark" id="axisMark">
-            <path d="M68 120h104"></path>
-            <circle cx="120" cy="120" r="8"></circle>
-          </g>
-          <rect class="dial-readout-bg" x="73" y="57" width="94" height="59" rx="19"></rect>
-          <circle class="dial-knob" id="dialKnob" cx="120" cy="32" r="9"></circle>
-          <text class="dial-number" id="dialValue" x="120" y="92" text-anchor="middle">0°00′</text>
-          <text class="dial-label" id="dialLabel" x="120" y="142" text-anchor="middle">Крен датчика</text>
-        </svg>
-        <div class="sensor-pill" id="sensorSource" aria-label="Источник крена" hidden>
-          <span>Источник</span>
-          <strong id="dialMode">IMU</strong>
-        </div>
+      <div class="dial-row">
+        <aside class="experiment-strip experiment-strip-side" id="sideExperimentHud" data-visible="false" aria-label="Данные эксперимента сбоку" hidden></aside>
+
+        <section class="dial-panel" aria-label="Положение станции">
+          <svg class="roll-dial" id="rollDial" data-placeholder="A1" data-read-only="true" viewBox="0 0 240 240" role="img" aria-labelledby="dialTitle dialValue">
+            <title id="dialTitle">Шкала продольного вращения</title>
+            <defs>
+              <linearGradient id="accentStroke" x1="40" x2="200" y1="200" y2="40">
+                <stop offset="0" stop-color="#f2a446"/>
+                <stop offset="1" stop-color="#ff7b5f"/>
+              </linearGradient>
+            </defs>
+            <circle class="dial-face" cx="120" cy="120" r="106"></circle>
+            <g class="dial-ticks" id="dialTicks"></g>
+            <circle class="dial-track" cx="120" cy="120" r="88"></circle>
+            <circle class="dial-arc" id="dialArc" cx="120" cy="120" r="88"></circle>
+            <g class="axis-mark" id="axisMark">
+              <path d="M68 120h104"></path>
+              <circle cx="120" cy="120" r="8"></circle>
+            </g>
+            <rect class="dial-readout-bg" x="61" y="60" width="118" height="56" rx="20"></rect>
+            <circle class="dial-knob" id="dialKnob" cx="120" cy="32" r="9"></circle>
+            <text class="dial-number" id="dialValue" data-placeholder="A1" x="120" y="96" text-anchor="middle">0°00′</text>
+            <text class="dial-label" id="dialLabel" data-placeholder="A0" x="120" y="170" text-anchor="middle">3°42′</text>
+          </svg>
+          <div class="sensor-pill" id="sensorSource" aria-label="Источник крена" hidden>
+            <span>Источник</span>
+            <strong id="dialMode">IMU</strong>
+          </div>
+        </section>
+      </div>
+
+      <section class="tilt-panel" id="tiltPanel" aria-label="Угол наклона" hidden>
+        <span>Угол наклона:</span>
+        <strong id="tiltValue" data-placeholder="A0">3°42′</strong>
       </section>
+
+      <button class="measure-button" id="measureButton" type="button" data-color="#ff865c" aria-label="Выполнить замер">
+        <span>Замер</span>
+      </button>
 
       <section class="chart-panel" aria-label="Профиль скважины">
         <div class="panel-head chart-head">
@@ -70,7 +90,7 @@
           <g class="chart-axis" id="chartYAxis"></g>
           <g class="chart-axis" id="chartXAxis"></g>
           <text class="axis-title y-title" id="chartYTitle" x="17" y="94" text-anchor="middle">Высота, м</text>
-          <text class="axis-title" id="chartXTitle" x="206" y="174" text-anchor="middle">Дистанция, м</text>
+          <text class="axis-title" id="chartXTitle" x="206" y="174" text-anchor="middle">Глубина, м</text>
           <path class="chart-fill" id="chartFill"></path>
           <path class="chart-line" id="chartLine"></path>
           <circle class="chart-point" id="chartPoint" r="5"></circle>
@@ -83,8 +103,8 @@
         </svg>
       </section>
 
-      <section class="info-grid" aria-label="Данные станции">
-        <article class="info-tile">
+      <section class="info-grid" id="infoGrid" aria-label="Данные станции">
+        <article class="info-tile" id="powerTile">
           <span class="tile-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="m13.2 2-7.7 11h5.2l-1 9 8.8-12h-5.8L13.2 2Z"/></svg>
           </span>
@@ -92,7 +112,7 @@
           <strong id="powerText">Вкл</strong>
         </article>
 
-        <article class="info-tile">
+        <article class="info-tile" id="tempTile">
           <span class="tile-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M10 4a2 2 0 1 1 4 0v8.5a5 5 0 1 1-4 0V4Zm2 11a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/></svg>
           </span>
@@ -100,7 +120,7 @@
           <strong id="tempText">24.1°C</strong>
         </article>
 
-        <article class="info-tile">
+        <article class="info-tile" id="signalTile">
           <span class="tile-icon signal-icon" id="signalIcon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M4 9.6a12 12 0 0 1 16 0l-2.2 2.2a8.8 8.8 0 0 0-11.6 0L4 9.6Zm4.3 4.2a5.8 5.8 0 0 1 7.4 0L12 18l-3.7-4.2Z"/></svg>
           </span>
@@ -108,7 +128,7 @@
           <strong id="wifiText">-54 dBm</strong>
         </article>
 
-        <article class="info-tile">
+        <article class="info-tile" id="voltageTile">
           <span class="tile-icon voltage-icon" id="voltageIcon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M7 3h10v4h2v12H5V7h2V3Zm2 4h6V5H9v2Zm-1 5h8v2H8v-2Zm0 4h5v2H8v-2Z"/></svg>
           </span>
@@ -117,7 +137,7 @@
         </article>
       </section>
 
-      <section class="power-panel" aria-label="Питание станции">
+      <section class="power-panel" id="powerPanel" aria-label="Питание станции">
         <div>
           <span class="panel-kicker">Реле питания</span>
           <strong id="powerState">Включено</strong>
@@ -127,7 +147,7 @@
         </button>
       </section>
 
-      <section class="table-panel" aria-label="Таблица измерений">
+      <section class="table-panel" id="tablePanel" aria-label="Таблица измерений">
         <div class="panel-head">
           <div>
             <span class="panel-kicker">Точки измерений</span>
@@ -150,6 +170,17 @@
     </button>
 
     <div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
+    <div class="confirm-backdrop" id="probeConfirmBackdrop" hidden></div>
+    <aside class="confirm-card" id="probeConfirm" aria-hidden="true" aria-label="Подтверждение отключения зонда" role="dialog" aria-modal="true">
+      <span class="panel-kicker">Питание зонда</span>
+      <strong>Выключить зонд?</strong>
+      <p>Питание и поток данных остановятся. Текущий замер может сбиться.</p>
+      <div class="confirm-actions">
+        <button class="confirm-button secondary" id="probeCancel" type="button">Оставить</button>
+        <button class="confirm-button danger" id="probeConfirmOff" type="button">Выключить</button>
+      </div>
+    </aside>
+
     <aside class="settings-sheet" id="settingsSheet" aria-hidden="true" aria-label="Настройки">
       <div class="sheet-grip"></div>
       <div class="sheet-head">
@@ -196,6 +227,6 @@
       </label>
     </aside>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=landscape-layout"></script>
   </body>
 </html>

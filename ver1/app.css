@@ -11,6 +11,7 @@
   --line: rgba(122, 135, 156, 0.14);
   --accent: #f59a3d;
   --accent-2: #ff735d;
+  --measure-color: #ff865c;
   --ok: #41b883;
   --ui-weight: 560;
   --title-weight: 740;
@@ -86,28 +87,145 @@ button {
   gap: 18px;
 }
 
-.topbar {
+.experiment-strip {
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface) 94%, var(--surface-2));
+  box-shadow: var(--shadow-soft);
+}
+
+.experiment-strip[hidden] {
+  display: none !important;
+}
+
+.experiment-strip-top {
+  min-height: 36px;
+  padding: 6px 11px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 8px;
+}
+
+.experiment-strip-side {
+  width: 58px;
+  min-height: 232px;
+  padding: 10px 7px;
+  display: grid;
+  align-content: space-between;
+  gap: 6px;
+}
+
+.hud-item {
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  gap: 1px;
+  color: var(--text);
+  line-height: 1;
+}
+
+.experiment-strip-top .hud-item {
+  grid-auto-flow: column;
+  justify-content: center;
+  gap: 3px;
+  min-width: max-content;
+}
+
+.hud-tag,
+.hud-value {
+  display: block;
+}
+
+.experiment-strip-top .hud-tag::after {
+  content: ":";
+}
+
+.hud-tag {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.hud-value {
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: var(--title-weight);
+}
+
+.experiment-strip-top .hud-tag,
+.experiment-strip-top .hud-value {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.experiment-strip-side .hud-tag {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.experiment-strip-side .hud-value {
+  font-size: 11px;
+}
+
+.hud-link {
+  gap: 4px;
+}
+
+.link-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #4aa3ff;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, #4aa3ff 16%, transparent),
+    0 0 14px color-mix(in srgb, #4aa3ff 70%, transparent);
+}
+
+.link-dot.is-lost {
+  background: #ff5b5b;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, #ff5b5b 16%, transparent),
+    0 0 14px color-mix(in srgb, #ff5b5b 65%, transparent);
+}
+
+.topbar {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) 58px;
+  align-items: center;
+  gap: 3px;
+  min-height: 63px;
+  padding: 7px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.dial-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: -8px 0 -8px;
 }
 
 .station-title {
   min-width: 0;
-  flex: 1;
   border: 0;
-  border-radius: var(--radius-lg);
-  padding: 13px 18px;
+  border-radius: 18px;
+  padding: 5px 4px;
   color: var(--text);
-  background: var(--surface);
-  box-shadow: var(--shadow-soft);
-  text-align: left;
+  background: transparent;
+  box-shadow: none;
+  text-align: center;
   touch-action: manipulation;
 }
 
 .station-title:active {
-  box-shadow: var(--shadow-in);
+  background: color-mix(in srgb, var(--surface-2) 64%, transparent);
+  box-shadow: none;
 }
 
 .station-kicker,
@@ -127,7 +245,7 @@ button {
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text);
-  font-size: 22px;
+  font-size: 21px;
   font-weight: var(--title-weight);
   outline: none;
 }
@@ -152,6 +270,13 @@ button {
   box-shadow: var(--shadow-soft);
 }
 
+.topbar .icon-button {
+  width: 46px;
+  height: 44px;
+  border-radius: 16px;
+  justify-self: center;
+}
+
 .icon-button.small {
   width: 42px;
   height: 42px;
@@ -165,6 +290,11 @@ button {
   fill: currentColor;
 }
 
+.settings-button svg {
+  width: 24px;
+  height: 24px;
+}
+
 .icon-button:active {
   box-shadow: var(--shadow-in);
 }
@@ -174,7 +304,7 @@ button {
   display: grid;
   place-items: center;
   width: fit-content;
-  margin: 18px auto 6px;
+  margin: 6px auto 0;
   isolation: isolate;
   overflow: visible;
 }
@@ -186,8 +316,8 @@ button {
 .roll-dial {
   position: relative;
   z-index: 1;
-  width: min(74vw, 276px);
-  height: min(74vw, 276px);
+  width: min(calc(100vw - 118px), 304px);
+  height: min(calc(100vw - 118px), 304px);
   border-radius: 50%;
   border: 1px solid color-mix(in srgb, var(--high) 52%, var(--line));
   background:
@@ -257,19 +387,20 @@ button {
 }
 
 .dial-readout-bg {
-  fill: color-mix(in srgb, var(--surface) 88%, var(--surface-2));
-  filter: drop-shadow(0 8px 8px rgba(0, 0, 0, 0.08));
+  fill: color-mix(in srgb, var(--surface) 34%, transparent);
+  filter: none;
 }
 
 .dial-number {
   fill: var(--text);
-  font-size: 26px;
+  font-size: 30px;
   font-weight: 780;
 }
 
 .dial-label {
-  fill: var(--muted);
-  font-size: 12px;
+  fill: var(--measure-color, var(--accent-2));
+  font-size: 30px;
+  font-weight: 780;
 }
 
 .dial-ticks line {
@@ -312,6 +443,64 @@ button {
   color: var(--text);
   font-size: 14px;
   font-weight: var(--title-weight);
+}
+
+.tilt-panel {
+  min-height: 58px;
+  padding: 10px 18px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.tilt-panel span {
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.tilt-panel strong {
+  color: var(--text);
+  font-size: 23px;
+  font-weight: var(--title-weight);
+  line-height: 1;
+}
+
+.measure-button {
+  --measure-color: #ff865c;
+  min-height: 58px;
+  border: 0;
+  border-radius: var(--radius-lg);
+  color: #fff;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--measure-color) 78%, #ffffff), var(--measure-color));
+  box-shadow:
+    0 12px 24px color-mix(in srgb, var(--measure-color) 28%, transparent),
+    inset 4px 4px 9px rgba(255, 255, 255, 0.24),
+    inset -6px -6px 14px rgba(0, 0, 0, 0.14);
+  text-align: center;
+  touch-action: manipulation;
+}
+
+.measure-button span {
+  display: block;
+  font-size: 23px;
+  font-weight: 820;
+  line-height: 1;
+}
+
+.measure-button:active,
+.measure-button.is-firing {
+  box-shadow:
+    0 8px 18px color-mix(in srgb, var(--measure-color) 22%, transparent),
+    inset 7px 7px 14px color-mix(in srgb, #000 18%, transparent),
+    inset -6px -6px 12px rgba(255, 255, 255, 0.18);
+  transform: translateY(1px);
 }
 
 .chart-panel,
@@ -590,6 +779,7 @@ button {
 }
 
 .power-switch,
+.probe-switch,
 .mini-switch {
   position: relative;
   border: 0;
@@ -604,12 +794,21 @@ button {
   height: 42px;
 }
 
+.probe-switch {
+  width: 56px;
+  height: 32px;
+  justify-self: center;
+  background: color-mix(in srgb, var(--surface) 92%, var(--surface-2));
+  box-shadow: var(--shadow-soft);
+}
+
 .mini-switch {
   width: 62px;
   height: 36px;
 }
 
 .power-switch span,
+.probe-switch span,
 .mini-switch span {
   position: absolute;
   top: 5px;
@@ -625,6 +824,11 @@ button {
   height: 32px;
 }
 
+.probe-switch span {
+  width: 22px;
+  height: 22px;
+}
+
 .mini-switch span {
   width: 26px;
   height: 26px;
@@ -632,6 +836,11 @@ button {
 
 .power-switch.is-on span {
   transform: translateX(34px);
+  background: linear-gradient(145deg, var(--ok), color-mix(in srgb, var(--ok) 62%, #ffffff));
+}
+
+.probe-switch.is-on span {
+  transform: translateX(24px);
   background: linear-gradient(145deg, var(--ok), color-mix(in srgb, var(--ok) 62%, #ffffff));
 }
 
@@ -673,8 +882,93 @@ button {
   z-index: 10;
 }
 
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 12;
+  background: rgba(0, 0, 0, 0.24);
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
 .sheet-backdrop.is-open {
   opacity: 1;
+}
+
+.confirm-backdrop.is-open {
+  opacity: 1;
+}
+
+.confirm-card {
+  position: fixed;
+  z-index: 13;
+  left: 50%;
+  top: 50%;
+  width: min(calc(100% - 36px), 360px);
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface) 94%, var(--surface-2));
+  box-shadow: var(--shadow-out);
+  transform: translate(-50%, -45%) scale(0.96);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.confirm-card.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.confirm-card strong,
+.confirm-card p {
+  margin: 0;
+}
+
+.confirm-card strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--text);
+  font-size: 22px;
+  font-weight: var(--title-weight);
+}
+
+.confirm-card p {
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.confirm-button {
+  min-height: 46px;
+  border: 0;
+  border-radius: 17px;
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  font-weight: var(--title-weight);
+}
+
+.confirm-button.danger {
+  color: #fff;
+  background: linear-gradient(145deg, #ff9c82, #ff5f5f);
+  box-shadow:
+    0 10px 20px rgba(255, 95, 95, 0.24),
+    inset 4px 4px 9px rgba(255, 255, 255, 0.2),
+    inset -5px -5px 12px rgba(0, 0, 0, 0.14);
+}
+
+.confirm-button:active {
+  box-shadow: var(--shadow-in);
 }
 
 .settings-sheet {
@@ -820,6 +1114,79 @@ button {
   .tile-icon {
     grid-row: auto;
     margin-bottom: 10px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  body {
+    overflow: hidden;
+  }
+
+  .app-shell {
+    width: 100%;
+    height: 100svh;
+    min-height: 100svh;
+    padding: calc(10px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
+    grid-template-columns: 410px minmax(0, 1fr);
+    grid-template-rows: 63px minmax(0, 1fr) 58px;
+    grid-template-areas:
+      "topbar chart"
+      "dial chart"
+      "dial measure";
+    align-items: stretch;
+    gap: 12px 16px;
+  }
+
+  .experiment-strip-top {
+    display: none !important;
+  }
+
+  .topbar {
+    grid-area: topbar;
+    align-self: start;
+  }
+
+  .dial-row {
+    grid-area: dial;
+    align-self: center;
+    justify-content: flex-start;
+    margin: 0;
+  }
+
+  .experiment-strip-side {
+    min-height: 232px;
+  }
+
+  .roll-dial {
+    width: 304px;
+    height: 304px;
+  }
+
+  .chart-panel {
+    grid-area: chart;
+    min-height: 0;
+    height: 100%;
+    padding: 16px 18px 12px;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .line-chart {
+    height: 100%;
+    min-height: 184px;
+  }
+
+  .measure-button {
+    grid-area: measure;
+    align-self: end;
+    min-height: 58px;
+  }
+
+  .tilt-panel,
+  .info-grid,
+  .power-panel,
+  .table-panel {
+    display: none !important;
   }
 }
 

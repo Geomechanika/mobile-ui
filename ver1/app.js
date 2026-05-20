@@ -4,11 +4,37 @@ const DIAL_CIRC = TAU * DIAL_RADIUS;
 
 const UI_CONFIG = {
   dialReadOnly: true,
+  experimentHud: {
+    topVisible: true,
+    sideVisible: false,
+    items: {
+      battery: true,
+      probeVoltage: true,
+      stationTemp: true,
+      probeTemp: true,
+      memory: true,
+      link: true,
+    },
+  },
+  panels: {
+    infoGrid: true,
+    infoTiles: {
+      power: true,
+      temperature: true,
+      signal: true,
+      voltage: true,
+    },
+    tiltPanel: false,
+    measureButton: true,
+    powerPanel: true,
+    tablePanel: true,
+  },
+  measureButtonColor: "#ff865c",
   showDialLabel: true,
   showSensorSource: false,
   showChartTitle: true,
   showYAxisTitle: false,
-  chartXTitle: "Дистанция, м",
+  chartXTitle: "Глубина, м",
   tableMaxRows: Infinity,
   tableColumns: [
     { key: "index", label: "Точка" },
@@ -19,6 +45,8 @@ const UI_CONFIG = {
   ],
   pollMs: 3000,
 };
+
+const landscapeQuery = window.matchMedia("(orientation: landscape) and (max-height: 560px)");
 
 const chartMetrics = {
   height: {
@@ -47,10 +75,19 @@ const chartMetrics = {
 const state = {
   angle: 0,
   chartActiveIndex: null,
+  chartTooltipVisible: false,
   connected: true,
   dialReadOnly: UI_CONFIG.dialReadOnly,
+  battery: 4.12,
+  inclineAngle: 3.7,
   metric: "height",
+  memoryFree: 399,
   power: true,
+  probePower: true,
+  probeTemp: 8.1,
+  probeVoltage: 13.02,
+  probeVoltageAvailable: true,
+  stationTemp: 12.1,
   temp: 24.1,
   wifi: -54,
   voltage: 5.04,
@@ -68,6 +105,8 @@ const els = {
   stationTitle: document.getElementById("stationTitle"),
   stationName: document.getElementById("stationName"),
   stationInput: document.getElementById("stationInput"),
+  topExperimentHud: document.getElementById("topExperimentHud"),
+  sideExperimentHud: document.getElementById("sideExperimentHud"),
   rollDial: document.getElementById("rollDial"),
   sensorSource: document.getElementById("sensorSource"),
   dialMode: document.getElementById("dialMode"),
@@ -96,14 +135,29 @@ const els = {
   dataHead: document.getElementById("dataHead"),
   dataRows: document.getElementById("dataRows"),
   tableStatus: document.getElementById("tableStatus"),
+  tiltPanel: document.getElementById("tiltPanel"),
+  tiltValue: document.getElementById("tiltValue"),
+  measureButton: document.getElementById("measureButton"),
+  infoGrid: document.getElementById("infoGrid"),
+  powerTile: document.getElementById("powerTile"),
+  tempTile: document.getElementById("tempTile"),
+  signalTile: document.getElementById("signalTile"),
+  voltageTile: document.getElementById("voltageTile"),
   tempText: document.getElementById("tempText"),
   signalIcon: document.getElementById("signalIcon"),
   wifiText: document.getElementById("wifiText"),
   voltageIcon: document.getElementById("voltageIcon"),
   voltText: document.getElementById("voltText"),
   powerText: document.getElementById("powerText"),
+  powerPanel: document.getElementById("powerPanel"),
   powerState: document.getElementById("powerState"),
   powerSwitch: document.getElementById("powerSwitch"),
+  probePowerSwitch: document.getElementById("probePowerSwitch"),
+  probeConfirmBackdrop: document.getElementById("probeConfirmBackdrop"),
+  probeConfirm: document.getElementById("probeConfirm"),
+  probeCancel: document.getElementById("probeCancel"),
+  probeConfirmOff: document.getElementById("probeConfirmOff"),
+  tablePanel: document.getElementById("tablePanel"),
   settingsOpen: document.getElementById("settingsOpen"),
   settingsClose: document.getElementById("settingsClose"),
   settingsSheet: document.getElementById("settingsSheet"),
@@ -133,6 +187,10 @@ function setVisible(element, visible) {
     element.setAttribute("hidden", "");
   }
   element.style.display = visible ? "" : "none";
+}
+
+function isLandscapeLayout() {
+  return landscapeQuery.matches;
 }
 
 function formatValue(value, metric = state.metric) {
@@ -165,6 +223,113 @@ function voltageColor(voltage) {
   if (!Number.isFinite(voltage)) return "#ff5b5b";
   const quality = (clamp(voltage, 3.2, 5.2) - 3.2) / 2;
   return `hsl(${Math.round(5 + quality * 135)} 78% 48%)`;
+}
+
+function formatVoltage(value) {
+  return Number.isFinite(Number(value)) ? `${Number(value).toFixed(2)}В` : "--";
+}
+
+function formatTemperature(value) {
+  return Number.isFinite(Number(value)) ? `${Number(value).toFixed(1)}°C` : "--";
+}
+
+function hudItems() {
+  return [
+    {
+      key: "battery",
+      tag: "B",
+      value: formatVoltage(state.battery),
+      visible: UI_CONFIG.experimentHud.items.battery,
+    },
+    {
+      key: "probeVoltage",
+      tag: "P",
+      value: state.probeVoltageAvailable ? formatVoltage(state.probeVoltage) : "--",
+      visible: UI_CONFIG.experimentHud.items.probeVoltage,
+    },
+    {
+      key: "stationTemp",
+      tag: "Ts",
+      value: formatTemperature(state.stationTemp),
+      visible: UI_CONFIG.experimentHud.items.stationTemp,
+    },
+    {
+      key: "probeTemp",
+      tag: "Tp",
+      value: formatTemperature(state.probeTemp),
+      visible: UI_CONFIG.experimentHud.items.probeTemp,
+    },
+    {
+      key: "memory",
+      tag: "Mem",
+      value: Number.isFinite(Number(state.memoryFree)) ? String(Math.round(state.memoryFree)) : "--",
+      visible: UI_CONFIG.experimentHud.items.memory,
+    },
+    {
+      key: "link",
+      tag: "",
+      value: "",
+      type: "link",
+      visible: UI_CONFIG.experimentHud.items.link,
+    },
+  ].filter((item) => item.visible);
+}
+
+function renderHudItem(item) {
+  const node = document.createElement("span");
+  node.className = `hud-item hud-${item.key}`;
+
+  if (item.type === "link") {
+    node.classList.add("hud-link");
+    const dot = document.createElement("span");
+    dot.className = "link-dot";
+    dot.classList.toggle("is-lost", !state.connected);
+    dot.setAttribute("aria-label", state.connected ? "Связь есть" : "Связь потеряна");
+    node.appendChild(dot);
+    return node;
+  }
+
+  const tag = document.createElement("span");
+  tag.className = "hud-tag";
+  tag.textContent = item.tag;
+
+  const value = document.createElement("strong");
+  value.className = "hud-value";
+  value.textContent = item.value;
+
+  node.append(tag, value);
+  return node;
+}
+
+function renderExperimentHud() {
+  const items = hudItems();
+  const topFragment = document.createDocumentFragment();
+  const sideFragment = document.createDocumentFragment();
+  const landscape = isLandscapeLayout();
+
+  items.forEach((item) => {
+    topFragment.appendChild(renderHudItem(item));
+    sideFragment.appendChild(renderHudItem(item));
+  });
+
+  els.topExperimentHud.replaceChildren(topFragment);
+  els.sideExperimentHud.replaceChildren(sideFragment);
+  setVisible(els.topExperimentHud, !landscape && UI_CONFIG.experimentHud.topVisible);
+  setVisible(els.sideExperimentHud, landscape || UI_CONFIG.experimentHud.sideVisible);
+  els.sideExperimentHud.dataset.visible = String(landscape || UI_CONFIG.experimentHud.sideVisible);
+}
+
+function renderPanelVisibility() {
+  const panels = UI_CONFIG.panels;
+  setVisible(els.infoGrid, panels.infoGrid);
+  setVisible(els.powerTile, panels.infoTiles.power);
+  setVisible(els.tempTile, panels.infoTiles.temperature);
+  setVisible(els.signalTile, panels.infoTiles.signal);
+  setVisible(els.voltageTile, panels.infoTiles.voltage);
+  setVisible(els.tiltPanel, panels.tiltPanel);
+  setVisible(els.measureButton, panels.measureButton);
+  setVisible(els.powerPanel, panels.powerPanel);
+  setVisible(els.tablePanel, panels.tablePanel);
 }
 
 function polarPoint(angleDeg, radius = DIAL_RADIUS) {
@@ -264,6 +429,12 @@ function renderDial(angle) {
   els.dialValue.textContent = formatAngle(state.angle);
 }
 
+function renderIncline() {
+  const value = formatAngle(state.inclineAngle);
+  els.dialLabel.textContent = value;
+  els.tiltValue.textContent = value;
+}
+
 function smoothPath(points) {
   if (points.length < 2) return "";
   let path = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
@@ -334,6 +505,14 @@ function renderChartAxes(layout, xDomain, yDomain, metric) {
   els.chartXTitle.setAttribute("y", (layout.bottomEdge + 34).toFixed(2));
 }
 
+function positionChartPoint(index, points) {
+  const point = points[index];
+  if (!point) return;
+  state.chartActiveIndex = index;
+  els.chartPoint.setAttribute("cx", point.x.toFixed(2));
+  els.chartPoint.setAttribute("cy", point.y.toFixed(2));
+}
+
 function selectChartPoint(index, points) {
   const metric = state.metric;
   const point = points[index];
@@ -343,9 +522,8 @@ function selectChartPoint(index, points) {
   const x = clamp(point.x - tooltipW / 2, 48, 354 - tooltipW);
   const y = point.y > 72 ? point.y - tooltipH - 12 : point.y + 14;
 
-  state.chartActiveIndex = index;
-  els.chartPoint.setAttribute("cx", point.x.toFixed(2));
-  els.chartPoint.setAttribute("cy", point.y.toFixed(2));
+  state.chartTooltipVisible = true;
+  positionChartPoint(index, points);
   els.chartTooltip.setAttribute("transform", `translate(${x.toFixed(2)} ${y.toFixed(2)})`);
   els.chartTooltipTitle.textContent = `${UI_CONFIG.chartXTitle}: ${Number(state.profile.x[point.sourceIndex]).toFixed(0)}`;
   els.chartTooltipValue.textContent = `${chartMetrics[metric].label}: ${formatValue(point.sample, metric)}`;
@@ -363,9 +541,13 @@ function renderChartHitPoints(points) {
       tabindex: "0",
       "aria-label": `Точка ${index + 1}`,
     });
-    hit.addEventListener("pointerenter", () => selectChartPoint(index, points));
-    hit.addEventListener("click", () => selectChartPoint(index, points));
-    hit.addEventListener("focus", () => selectChartPoint(index, points));
+    hit.addEventListener("pointerdown", () => selectChartPoint(index, points));
+    hit.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        selectChartPoint(index, points);
+      }
+    });
     fragment.appendChild(hit);
   });
 
@@ -402,7 +584,13 @@ function renderChart() {
   els.chartLine.setAttribute("d", line);
   els.chartFill.setAttribute("d", `${line} L ${last.x.toFixed(2)} ${layout.bottomEdge} L ${points[0].x.toFixed(2)} ${layout.bottomEdge} Z`);
   renderChartHitPoints(points);
-  selectChartPoint(clamp(state.chartActiveIndex ?? points.length - 1, 0, points.length - 1), points);
+  const markerIndex = clamp(state.chartActiveIndex ?? points.length - 1, 0, points.length - 1);
+  positionChartPoint(markerIndex, points);
+  if (state.chartTooltipVisible && state.chartActiveIndex !== null) {
+    selectChartPoint(state.chartActiveIndex, points);
+  } else {
+    setVisible(els.chartTooltip, false);
+  }
   els.chartPeak.textContent = `${config.label}: ${formatValue(last.sample, metric)}`;
 }
 
@@ -472,6 +660,9 @@ function renderTelemetry() {
   els.powerState.textContent = state.power ? "Включено" : "Отключено";
   els.powerSwitch.classList.toggle("is-on", state.power);
   els.powerSwitch.setAttribute("aria-checked", String(state.power));
+  els.probePowerSwitch.classList.toggle("is-on", state.probePower);
+  els.probePowerSwitch.setAttribute("aria-checked", String(state.probePower));
+  renderExperimentHud();
 }
 
 async function postJson(url, payload) {
@@ -491,6 +682,59 @@ function setPower(nextPower, sync = true) {
   state.power = nextPower;
   renderTelemetry();
   if (sync) postJson("/api/power", { power: nextPower });
+}
+
+function setProbePower(nextPower, sync = true) {
+  state.probePower = Boolean(nextPower);
+  state.probeVoltageAvailable = state.probePower;
+  renderTelemetry();
+  if (sync) postJson("/api/probe-power", { probePower: state.probePower });
+}
+
+function openProbeConfirm() {
+  els.probeConfirmBackdrop.hidden = false;
+  requestAnimationFrame(() => {
+    els.probeConfirmBackdrop.classList.add("is-open");
+    els.probeConfirm.classList.add("is-open");
+    els.probeConfirm.setAttribute("aria-hidden", "false");
+    els.probeCancel.focus();
+  });
+}
+
+function closeProbeConfirm() {
+  els.probeConfirmBackdrop.classList.remove("is-open");
+  els.probeConfirm.classList.remove("is-open");
+  els.probeConfirm.setAttribute("aria-hidden", "true");
+  window.setTimeout(() => {
+    if (!els.probeConfirm.classList.contains("is-open")) els.probeConfirmBackdrop.hidden = true;
+  }, 180);
+}
+
+function confirmProbeOff() {
+  closeProbeConfirm();
+  setProbePower(false);
+}
+
+function setInclineAngle(angle) {
+  if (!Number.isFinite(Number(angle))) return;
+  state.inclineAngle = normalizeAngle(Number(angle));
+  renderIncline();
+}
+
+function applyMeasureButtonColor(color) {
+  if (typeof color !== "string" || !color.trim()) return;
+  const nextColor = color.trim();
+  if (window.CSS?.supports && !CSS.supports("color", nextColor)) return;
+  UI_CONFIG.measureButtonColor = nextColor;
+  els.root.style.setProperty("--measure-color", nextColor);
+  els.measureButton.dataset.color = nextColor;
+  els.measureButton.style.setProperty("--measure-color", nextColor);
+}
+
+function triggerMeasure(sync = true) {
+  els.measureButton.classList.add("is-firing");
+  window.setTimeout(() => els.measureButton.classList.remove("is-firing"), 320);
+  if (sync) postJson("/api/measure", { measure: true });
 }
 
 function setTheme(theme) {
@@ -640,6 +884,17 @@ function bindStationName() {
 
 function bindControls() {
   els.powerSwitch.addEventListener("click", () => setPower(!state.power));
+  els.probePowerSwitch.addEventListener("click", () => {
+    if (state.probePower) {
+      openProbeConfirm();
+    } else {
+      setProbePower(true);
+    }
+  });
+  els.probeCancel.addEventListener("click", closeProbeConfirm);
+  els.probeConfirmOff.addEventListener("click", confirmProbeOff);
+  els.probeConfirmBackdrop.addEventListener("click", closeProbeConfirm);
+  els.measureButton.addEventListener("click", () => triggerMeasure());
   els.settingsOpen.addEventListener("click", openSettings);
   els.settingsClose.addEventListener("click", closeSettings);
   els.sheetBackdrop.addEventListener("click", closeSettings);
@@ -657,6 +912,80 @@ function bindControls() {
   window.addEventListener("scroll", () => {
     els.scrollTop.hidden = window.scrollY < 360;
   }, { passive: true });
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && els.probeConfirm.classList.contains("is-open")) {
+      closeProbeConfirm();
+    }
+  });
+  landscapeQuery.addEventListener("change", () => {
+    renderExperimentHud();
+    renderChart();
+  });
+}
+
+function applyExperimentOptions(options) {
+  if (!options || typeof options !== "object") return;
+  if (typeof options.topVisible === "boolean") {
+    UI_CONFIG.experimentHud.topVisible = options.topVisible;
+  }
+  if (typeof options.sideVisible === "boolean") {
+    UI_CONFIG.experimentHud.sideVisible = options.sideVisible;
+  }
+  if (options.items && typeof options.items === "object") {
+    Object.entries(options.items).forEach(([key, visible]) => {
+      if (key in UI_CONFIG.experimentHud.items && typeof visible === "boolean") {
+        UI_CONFIG.experimentHud.items[key] = visible;
+      }
+    });
+  }
+}
+
+function applyPanelOptions(options) {
+  if (!options || typeof options !== "object") return;
+  const panels = UI_CONFIG.panels;
+
+  ["infoGrid", "tiltPanel", "measureButton", "powerPanel", "tablePanel"].forEach((key) => {
+    if (typeof options[key] === "boolean") panels[key] = options[key];
+  });
+
+  if (options.infoTiles && typeof options.infoTiles === "object") {
+    Object.entries(options.infoTiles).forEach(([key, visible]) => {
+      if (key in panels.infoTiles && typeof visible === "boolean") {
+        panels.infoTiles[key] = visible;
+      }
+    });
+  }
+}
+
+function applyExperimentData(data) {
+  if (!data || typeof data !== "object") return;
+
+  const battery = data.battery ?? data.bat;
+  const probeVoltage = data.probeVoltage ?? data.vprobe;
+  const stationTemp = data.stationTemp ?? data.tstation;
+  const probeTemp = data.probeTemp ?? data.tprobe;
+  const memoryFree = data.memoryFree ?? data.mem;
+  const probePower = data.probePower ?? data.probePowered ?? data.probe_power;
+  const inclineAngle = data.inclineAngle ?? data.tiltAngle ?? data.A0 ?? data.a0;
+  const measureButtonColor = data.measureButtonColor ?? data.measureColor;
+
+  if (Number.isFinite(Number(battery))) state.battery = Number(battery);
+  if (Number.isFinite(Number(probeVoltage))) state.probeVoltage = Number(probeVoltage);
+  if (Number.isFinite(Number(stationTemp))) state.stationTemp = Number(stationTemp);
+  if (Number.isFinite(Number(probeTemp))) state.probeTemp = Number(probeTemp);
+  if (Number.isFinite(Number(memoryFree))) state.memoryFree = Number(memoryFree);
+  if (Number.isFinite(Number(inclineAngle))) state.inclineAngle = normalizeAngle(Number(inclineAngle));
+  applyMeasureButtonColor(measureButtonColor);
+
+  if (typeof probePower === "boolean") {
+    state.probePower = probePower;
+  }
+
+  if (typeof data.probeVoltageAvailable === "boolean") {
+    state.probeVoltageAvailable = data.probeVoltageAvailable;
+  } else if (typeof probePower === "boolean") {
+    state.probeVoltageAvailable = state.probePower;
+  }
 }
 
 function normalizeProfile(profile) {
@@ -716,7 +1045,12 @@ async function fetchState() {
     }
     const data = await response.json();
     state.connected = true;
-    if (Number.isFinite(data.angle)) renderDial(data.angle);
+    applyExperimentData(data);
+    applyExperimentOptions(data.experimentHud);
+    applyPanelOptions(data.panels || data.visiblePanels);
+    renderPanelVisibility();
+    const rollAngle = data.angle ?? data.A1 ?? data.a1;
+    if (Number.isFinite(Number(rollAngle))) renderDial(Number(rollAngle));
     if (Number.isFinite(data.temp)) state.temp = data.temp;
     if (Number.isFinite(data.wifi)) state.wifi = data.wifi;
     if (Number.isFinite(data.voltage)) state.voltage = data.voltage;
@@ -734,12 +1068,14 @@ async function fetchState() {
       renderTable();
     }
     renderTelemetry();
+    renderIncline();
   } catch {
     state.connected = false;
     const next = clamp(state.angle + (Math.random() - 0.5) * 8, -180, 180);
     state.temp += (Math.random() - 0.5) * 0.08;
     pushDemoSample(next);
     renderDial(next);
+    renderIncline();
     renderChart();
     renderTable();
     renderTelemetry();
@@ -752,6 +1088,14 @@ function exposeApi() {
     setDialLabelVisible,
     setSensorSourceVisible,
     setChartTitleVisible,
+    setExperimentHudOptions(options) {
+      applyExperimentOptions(options);
+      renderExperimentHud();
+    },
+    setPanelVisibility(options) {
+      applyPanelOptions(options);
+      renderPanelVisibility();
+    },
     setYAxisTitleVisible,
     setChartXTitle(label) {
       UI_CONFIG.chartXTitle = label || UI_CONFIG.chartXTitle;
@@ -760,18 +1104,27 @@ function exposeApi() {
     },
     setMetric,
     setPower,
+    setProbePower,
+    setInclineAngle,
+    setMeasureButtonColor: applyMeasureButtonColor,
+    measure: triggerMeasure,
     setTableColumns(columns) {
       if (!Array.isArray(columns)) return;
       UI_CONFIG.tableColumns = columns.filter((column) => column && column.key);
       renderTable();
     },
     update(data) {
-      if (Number.isFinite(data.angle)) renderDial(data.angle);
+      const rollAngle = data.angle ?? data.A1 ?? data.a1;
+      if (Number.isFinite(Number(rollAngle))) renderDial(Number(rollAngle));
       if (Number.isFinite(data.temp)) state.temp = data.temp;
       if (Number.isFinite(data.wifi)) state.wifi = data.wifi;
       if (Number.isFinite(data.voltage)) state.voltage = data.voltage;
       if (typeof data.power === "boolean") state.power = data.power;
       if (typeof data.connected === "boolean") state.connected = data.connected;
+      applyExperimentData(data);
+      applyExperimentOptions(data.experimentHud);
+      applyPanelOptions(data.panels || data.visiblePanels);
+      renderPanelVisibility();
       if (typeof data.dialReadOnly === "boolean") setDialReadOnly(data.dialReadOnly);
       if (typeof data.showDialLabel === "boolean") setDialLabelVisible(data.showDialLabel);
       if (typeof data.showSensorSource === "boolean") setSensorSourceVisible(data.showSensorSource);
@@ -784,6 +1137,7 @@ function exposeApi() {
         UI_CONFIG.chartXTitle = data.chartXTitle;
         applyChartXTitle(data.chartXTitle);
       }
+      renderIncline();
       if (normalizeProfile(data.profile)) {
         renderChart();
         renderTable();
@@ -818,9 +1172,13 @@ function boot() {
   setChartTitleVisible(UI_CONFIG.showChartTitle);
   setYAxisTitleVisible(UI_CONFIG.showYAxisTitle);
   applyChartXTitle(UI_CONFIG.chartXTitle);
+  applyMeasureButtonColor(els.measureButton.dataset.color || UI_CONFIG.measureButtonColor);
+  renderPanelVisibility();
   renderDial(state.angle);
+  renderIncline();
   renderChart();
   renderTable();
+  renderExperimentHud();
   renderTelemetry();
   bindDial();
   bindStationName();
